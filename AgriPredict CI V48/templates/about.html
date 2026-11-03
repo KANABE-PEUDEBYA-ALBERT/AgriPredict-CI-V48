@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}À propos · AgriPredict CI{% endblock %}
+{% block content %}
+<section class="about-hero">
+  <div class="about-hero-copy">
+    <p class="about-kicker"><span></span> DÉCOUVRIR AGRIPREDICT CI</p>
+    <h1>Comprendre la plateforme,<br><em>explorer ses possibilités.</em></h1>
+    <p>AgriPredict CI rassemble dans un même espace des outils pour organiser les activités agricoles, suivre les cultures et éclairer les décisions du producteur.</p>
+  </div>
+  <aside class="about-hero-panel">
+    <span class="about-panel-kicker">VOTRE POINT DE DÉPART</span>
+    <h2>Que souhaitez-vous faire ?</h2>
+    <p>Accédez directement à un espace de la plateforme.</p>
+    <a href="{{ url_for('farm') }}">Gérer mes exploitations <span>↗</span></a>
+    <a href="{{ url_for('agricultural_map') }}">Consulter la carte agricole <span>↗</span></a>
+    <a href="{{ url_for('simulator') }}">Simuler ma production <span>↗</span></a>
+    <a href="{{ url_for('advisor') }}">Ouvrir les conseils et l'assistant <span>↗</span></a>
+  </aside>
+</section>
+
+<section class="about-section">
+  <div class="about-section-heading">
+    <span class="about-index">01 / LA PLATEFORME</span>
+    <h2>À propos de l'application</h2>
+  </div>
+  <div class="about-two-col">
+    <p class="about-lead">AgriPredict CI est une plateforme web d'aide à la gestion et au suivi des activités agricoles, pensée autour des besoins des producteurs en Côte d'Ivoire.</p>
+    <div>
+      <p>Elle réunit plusieurs fonctionnalités complémentaires : enregistrement des exploitations et des parcelles, repérage géographique, organisation des campagnes, consultation de conseils agricoles et estimation indicative de la récolte.</p>
+      <p>Son objectif est de rendre ces informations plus faciles à consulter et à utiliser, afin d'aider les producteurs à mieux organiser leurs activités et à préparer leurs décisions.</p>
+    </div>
+  </div>
+</section>
+
+<section class="about-section about-audience">
+  <div class="about-section-heading">
+    <span class="about-index">02 / POUR QUI ?</span>
+    <h2>À qui s'adresse AgriPredict CI ?</h2>
+  </div>
+  <div class="about-audience-grid">
+    <article><span>🌱</span><h3>Producteurs agricoles</h3><p>Pour enregistrer leurs espaces de production, suivre leurs parcelles et organiser les travaux.</p></article>
+    <article><span>🗺️</span><h3>Exploitants et responsables de terrain</h3><p>Pour visualiser les parcelles, retrouver leur localisation et mieux structurer les informations agricoles.</p></article>
+    <article><span>📊</span><h3>Apprenants et acteurs agricoles</h3><p>Pour découvrir des outils numériques de suivi, de conseil et d'aide à la décision agricole.</p></article>
+  </div>
+</section>
+
+<section class="about-section">
+  <div class="about-section-heading">
+    <span class="about-index">03 / LES BESOINS</span>
+    <h2>Quels problèmes la plateforme cherche-t-elle à résoudre ?</h2>
+  </div>
+  <div class="about-problem-grid">
+    <article><b>01</b><div><h3>Des informations dispersées</h3><p>Centraliser les informations relatives aux exploitations, aux parcelles et aux cultures dans un espace unique.</p></div></article>
+    <article><b>02</b><div><h3>Un suivi difficile à organiser</h3><p>Faciliter le suivi des campagnes et la consultation des tâches agricoles à réaliser.</p></div></article>
+    <article><b>03</b><div><h3>Des décisions à mieux préparer</h3><p>Mettre à disposition des conseils et des estimations indicatives pour éclairer la planification de la production.</p></div></article>
+  </div>
+  <p class="about-note">Les estimations et conseils fournis par la plateforme sont des aides à la décision. Ils ne remplacent pas l'observation du terrain ni l'avis d'un spécialiste agricole.</p>
+</section>
+
+<section class="about-section about-modules">
+  <div class="about-section-heading">
+    <span class="about-index">04 / EXPLORER</span>
+    <h2>Retrouvez les différents espaces</h2>
+    <p>Chaque raccourci vous conduit directement au module correspondant.</p>
+  </div>
+  <div class="about-module-grid">
+    <a href="{{ url_for('index') }}"><span>⌂</span><div><h3>Accueil</h3><p>Découvrir la plateforme et ses principales possibilités.</p></div><b>↗</b></a>
+    <a href="{{ url_for('farm') }}"><span>⌂</span><div><h3>Mes exploitations</h3><p>Créer et consulter les sites agricoles gérés.</p></div><b>↗</b></a>
+    <a href="{{ url_for('plots') }}"><span>▦</span><div><h3>Mes parcelles</h3><p>Enregistrer les terrains rattachés aux exploitations.</p></div><b>↗</b></a>
+    <a href="{{ url_for('agricultural_map') }}"><span>⌖</span><div><h3>Carte agricole</h3><p>Localiser les parcelles et consulter leur représentation géographique.</p></div><b>↗</b></a>
+    <a href="{{ url_for('dashboard') }}"><span>▤</span><div><h3>Tableau de bord producteur</h3><p>Retrouver une vue d'ensemble du suivi de ses activités.</p></div><b>↗</b></a>
+    <a href="{{ url_for('simulator') }}"><span>⌁</span><div><h3>Simuler ma production</h3><p>Obtenir une estimation indicative à partir des caractéristiques renseignées.</p></div><b>↗</b></a>
+    <a href="{{ url_for('forecast') }}"><span>↗</span><div><h3>Prévisions</h3><p>Consulter les outils de prévision disponibles.</p></div><b>↗</b></a>
+    <a href="{{ url_for('crop_guide') }}"><span>✦</span><div><h3>Conseils par culture</h3><p>Consulter les guides et informations sur les cultures.</p></div><b>↗</b></a>
+    <a href="{{ url_for('advisor') }}"><span>✧</span><div><h3>Conseiller agricole et assistant IA</h3><p>Accéder au conseil agricole et à l'assistant conversationnel.</p></div><b>↗</b></a>
+  </div>
+</section>
+
+<section class="about-origin">
+  <div>
+    <span class="about-index">05 / ORIGINE DU PROJET</span>
+    <h2>Un projet né d'un apprentissage en programmation web.</h2>
+  </div>
+  <p>AgriPredict CI a été conçu dans le cadre d'un cours de programmation web. Le projet met en pratique la conception et le développement d'une application web autour d'une problématique concrète : l'organisation, le suivi et l'aide à la décision dans le domaine agricole.</p>
+</section>
+
+<footer class="about-credits">
+  <div><span>AG R I P R E D I C T&nbsp; C I</span><p>Une initiative numérique au service du suivi agricole.</p></div>
+  <div class="about-authors"><small>CONCEPTION ET DÉVELOPPEMENT</small><strong>Développé par KANABE PEUDEBYA ALBERT<br>et KOUAME ANAJA GLORIA</strong><p>Élèves analystes statisticiens</p></div>
+</footer>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Conseils et assistant | AgriPredict CI{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Conseils et assistant</h1>
+  <div class="grid-two">
+    <a class="panel choice-card" href="{{ url_for('crop_guide') }}">
+      <h2>Conseils par culture</h2>
+      
+      <span class="button">Voir les cultures</span>
+    </a>
+    <a class="panel choice-card" href="{{ url_for('general_ai') }}">
+      <h2>Assistant IA</h2>
+      <p>Discutez librement avec l'assistant, sans choisir de culture.</p>
+      <span class="button button-secondary">Ouvrir le chat</span>
+    </a>
+  </div>
+</section>
+{% endblock %}

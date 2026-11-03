@@ -1,0 +1,13 @@
+BASE AGRICOLE SIMULEE — AGRIPREDICT AFRICA
+
+Fichier : recoltes_simulees_100000.csv
+Volume : 115 000 lignes générées artificiellement.
+Variables : culture, région, superficie, pluviométrie, sol, semences,
+fertilisation, irrigation, rendement, production, prix simulé et charges simulées.
+
+Usage : démonstration, entraînement expérimental et calcul de scénarios dans
+le simulateur. Les prix et charges sont également simulés ; ils ne décrivent
+pas les marchés ni les coûts réels en Côte d’Ivoire.
+
+Aucune collecte de récoltes ou de dépenses n'est requise dans l'application.
+Ne pas présenter ces valeurs comme des observations de terrain.

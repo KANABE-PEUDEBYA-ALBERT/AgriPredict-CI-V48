@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Accueil · AgriPredict CI{% endblock %}
+{% block content %}
+<section class="hero hero-home">
+ <div class="hero-photo" aria-hidden="true"></div><div class="hero-overlay"></div>
+ <div class="hero-copy">
+  <p class="eyebrow"><span class="eyebrow-dot"></span> LA PLATEFORME AGRICOLE CONNECTÉE</p>
+  <h1>De la plantation à la récolte,<br><em>chaque décision compte.</em></h1>
+  <p class="hero-lead">Organisez vos exploitations, suivez vos cultures, anticipez les difficultés et améliorez votre production grâce à des outils d’aide à la décision.</p>
+  <div class="actions"><a class="button button-primary" href="{{ url_for('register') }}">Créer mon espace producteur <span>→</span></a><a class="button button-glass" href="{{ url_for('simulator') if current_user else url_for('login') }}">Prévoir ma récolte <span>↗</span></a></div>
+  <div class="hero-promises"><span>✓ Suivi des campagnes</span><span>✓ Conseils agronomiques</span><span>✓ Prévisions de récolte</span></div>
+ </div>
+ <aside class="overview-card">
+  <div class="overview-head"><div><span class="card-kicker">VOTRE ESPACE AGRICOLE</span><h2>Suivi de production</h2></div><span class="live-pill"><i></i> Votre exploitation</span></div>
+  <div class="overview-grid"><div class="overview-stat"><span>Exploitations</span><strong>01</strong><small>Gestion de vos espaces agricoles</small></div><div class="overview-stat"><span>Campagnes</span><strong>02</strong><small>Suivi des étapes culturales</small></div></div>
+  <div class="overview-market"><div class="market-title"><div><span class="card-kicker">VOTRE PRIORITÉ</span><h3>Bien conduire chaque culture</h3></div></div><p class="empty-note">Planifiez les travaux, suivez les parcelles et consultez les conseils adaptés aux cultures.</p></div>
+  <div class="overview-foot"><span><b>↗</b> Mieux planifier, mieux produire</span><span>AgriPredict CI</span></div>
+ </aside>
+</section>
+<section class="welcome-row"><div><span class="section-index">UNE PLATEFORME, UN OBJECTIF</span><h2>Accompagner le producteur<br>tout au long du cycle cultural.</h2></div></section>
+<section class="feature-grid">
+ <article class="feature-card"><span class="feature-number">01</span><div class="feature-icon">🌱</div><h3>Gérer mes exploitations</h3><p>Enregistrez vos exploitations, délimitez vos parcelles et organisez vos cultures.</p><a href="{{ url_for('farm') if current_user else url_for('login') }}">Gérer mes exploitations <span>→</span></a></article>
+ <article class="feature-card"><span class="feature-number">02</span><div class="feature-icon">🌾</div><h3>Suivre ma production</h3><p>Consultez vos campagnes, les activités à réaliser et l'évolution de vos parcelles.</p><a href="{{ url_for('dashboard') if current_user else url_for('login') }}">Ouvrir mon suivi <span>→</span></a></article>
+ <article class="feature-card"><span class="feature-number">03</span><div class="feature-icon">📈</div><h3>Prévoir ma récolte</h3><p>Obtenez une estimation de production à partir des caractéristiques de votre parcelle.</p><a href="{{ url_for('simulator') if current_user else url_for('login') }}">Accéder aux prévisions <span>→</span></a></article>
+ <article class="feature-card"><span class="feature-number">04</span><div class="feature-icon">✦</div><h3>Recevoir des conseils</h3><p>Consultez les guides de culture et obtenez un accompagnement agronomique.</p><a href="{{ url_for('crop_guide') if current_user else url_for('login') }}">Consulter les conseils <span>→</span></a></article>
+</section>
+
+{% endblock %}

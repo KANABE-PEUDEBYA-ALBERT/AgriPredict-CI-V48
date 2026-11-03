@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Assistant IA | AgriPredict CI{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Assistant IA</h1>
+  <section class="panel chat-panel">
+    {% if answer %}
+      <div class="chat-message user-message"><p>{{ question }}</p></div>
+      <div class="chat-message assistant-message" id="assistant-answer-rendered" aria-live="polite"></div>
+      <script type="application/json" id="assistant-answer-source">{{ answer|tojson }}</script>
+    {% endif %}
+    <form method="post" class="chat-form">
+      <label class="sr-only" for="question">Votre message</label>
+      <textarea id="question" name="question" rows="3" required placeholder="Écrivez votre message..."></textarea>
+      <button class="button" type="submit">Envoyer</button>
+    </form>
+  </section>
+</section>
+{% endblock %}

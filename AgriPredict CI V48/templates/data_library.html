@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Bibliothèque de données · AgriPredict CI{% endblock %}
+{% block content %}
+<section class="page-heading"><div><p class="eyebrow">DONNÉES OBSERVÉES · SOURCES TRAÇABLES</p><h1>Bibliothèque de données agricoles</h1></div><a class="button" href="{{ url_for('export_data_csv', **filters) }}">Exporter les résultats CSV ↓</a></section>
+<section class="panel">
+<form method="get" class="data-filters">
+<label>Produit<select name="product"><option value="">Tous les produits</option>{% for item in products %}<option value="{{ item }}" {% if filters.product == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></label>
+<label>Région<select name="region"><option value="">Toutes les régions</option>{% for item in regions %}<option value="{{ item }}" {% if filters.region == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></label>
+<label>Source<select name="source"><option value="">Toutes les sources</option>{% for item in sources %}<option value="{{ item }}" {% if filters.source == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></label>
+<label>Du<input type="date" name="debut" value="{{ filters.debut }}"></label>
+<label>Au<input type="date" name="fin" value="{{ filters.fin }}"></label>
+<button class="button" type="submit">Filtrer</button><a class="button secondary" href="{{ url_for('data_library') }}">Réinitialiser</a>
+</form>
+</section>
+<section><div class="page-heading"><div><h2>Observations disponibles</h2><p class="muted">{{ rows|length }} ligne(s) affichée(s), maximum 1 000 par consultation.</p></div></div>
+{% if rows %}<div class="table-wrap"><table><thead><tr><th>Date</th><th>Produit</th><th>Marché</th><th>Région</th><th>Prix (FCFA/kg)</th><th>Source</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ row.observed_on }}</td><td>{{ row.product }}</td><td>{{ row.market }}</td><td>{{ row.region or 'Non précisée' }}</td><td>{{ '%.2f'|format(row.price_fcfa_kg) }}</td><td>{{ row.source }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="panel empty-state"><h3>Aucune observation ne correspond à ces filtres</h3><a class="button" href="{{ url_for('prices') }}">Consulter les prix</a></div>{% endif %}</section>
+
+{% endblock %}

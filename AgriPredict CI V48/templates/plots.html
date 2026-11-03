@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Parcelles | AgriPredict CI{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">GESTION DES CHAMPS</p><h1>Mes parcelles</h1><p>Enregistrez chaque terrain séparément, puis rattachez-le à l’exploitation qui le gère.</p></div>
+</section>
+<div class="two-col plots-layout">
+  <section class="panel">
+    <h2>Ajouter un terrain (parcelle)</h2>
+    {% if farms %}
+    <form method="post">
+      <label>Exploitation<select name="farm_id" required>{% for f in farms %}<option value="{{ f.id }}">{{ f.name }} — {{ f.region }}</option>{% endfor %}</select></label>
+      <label>Nom de la parcelle<input name="name" required></label>
+      <label>Superficie (hectares)<input name="area_ha" type="number" min="0.01" step="0.01" required></label>
+      <label>Culture<select name="product">{% for product in products %}<option>{{ product }}</option>{% endfor %}</select></label>
+      <label>Date de semis ou plantation<input name="planting_date" type="date"></label>
+      <button class="button" type="submit">Enregistrer la parcelle</button>
+    </form>
+    {% else %}
+    <p>Créez d'abord une exploitation.</p><a class="button" href="{{ url_for('farm') }}">Créer une exploitation</a>
+    {% endif %}
+  </section>
+  <section class="panel plots-list-panel">
+    <div class="section-head"><h2>Parcelles enregistrées</h2><span class="count-pill">{{ plots|length }}</span></div>
+    {% if plots %}
+    <div class="plot-list">
+      {% for p in plots %}
+      <article class="plot-list-row">
+        <div class="plot-list-main"><span class="plot-farm">{{ p.farm_name }}</span><strong>{{ p.name }}</strong><span>{{ p.product }} · {{ p.area_ha }} ha</span><small>Plantation : {{ p.planting_date or 'non renseignée' }}</small></div>
+        <div class="plot-list-actions">
+          {% if not p.planting_date %}
+          <form method="post" action="{{ url_for('set_campaign_date', plot_id=p.id) }}" class="inline-date-form">
+            <label>Date de semis/plantation<input type="date" name="planting_date" required></label>
+            <button class="button small" type="submit">Créer le calendrier</button>
+          </form>
+          {% endif %}
+          <a href="{{ url_for('campaign', plot_id=p.id) }}">Carnet de campagne</a>
+          <a href="{{ url_for('harvest_forecast', plot_id=p.id) }}">Estimer la récolte</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">Aucune parcelle enregistrée.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

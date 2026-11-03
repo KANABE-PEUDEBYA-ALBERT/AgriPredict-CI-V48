@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord producteur | AgriPredict CI{% endblock %}
+{% block content %}
+<section class="page-heading dashboard-heading">
+  <div>
+    <p class="eyebrow">ESPACE PRODUCTEUR</p>
+    <h1>Bonjour {{ current_user.name }}</h1>
+    <p>Un aperçu de vos exploitations, de vos parcelles et du suivi de vos cultures.</p>
+  </div>
+  <div class="actions">
+    <a class="button" href="{{ url_for('farm') }}">Ajouter une exploitation</a>
+    <a class="button secondary" href="{{ url_for('plots') }}">Ajouter une parcelle</a>
+  </div>
+</section>
+
+<section class="dashboard-kpis" aria-label="Indicateurs agricoles">
+  <article class="dashboard-kpi">
+    <span class="kpi-label">Exploitations</span>
+    <strong>{{ farms|length }}</strong>
+    <small>Sites agricoles gérés</small>
+  </article>
+  <article class="dashboard-kpi">
+    <span class="kpi-label">Parcelles</span>
+    <strong>{{ plots|length }}</strong>
+    <small>Unités de terrain suivies</small>
+  </article>
+  <article class="dashboard-kpi">
+    <span class="kpi-label">Superficie cultivée</span>
+    <strong>{{ "%.2f"|format(total_area) }} ha</strong>
+    <small>Somme des superficies des parcelles</small>
+  </article>
+  <article class="dashboard-kpi">
+    <span class="kpi-label">Tâches à suivre</span>
+    <strong>{{ tasks|length }}</strong>
+    <small>Opérations non terminées</small>
+  </article>
+</section>
+
+<section class="panel dashboard-section">
+  <div class="section-head">
+    <div><p class="eyebrow">NIVEAU 1 · SITES AGRICOLES</p><h2>Mes exploitations</h2></div>
+    <a href="{{ url_for('farm') }}">Gérer les exploitations</a>
+  </div>
+  <p class="dashboard-explainer">Une exploitation représente un site agricole que vous gérez. Elle peut regrouper plusieurs parcelles.</p>
+  {% if farms %}
+  <div class="dashboard-farm-grid">
+    {% for f in farms %}
+    <article class="dashboard-farm-card">
+      <div class="dashboard-card-top">
+        <span class="dashboard-card-icon" aria-hidden="true">🏡</span>
+        <span class="count-pill">{{ f.plot_count }} parcelle{% if f.plot_count != 1 %}s{% endif %}</span>
+      </div>
+      <h3>{{ f.name }}</h3>
+      <p class="muted">{{ f.region }}{% if f.department %} · {{ f.department }}{% endif %}{% if f.locality %} · {{ f.locality }}{% endif %}{% if f.neighborhood %} · {{ f.neighborhood }}{% endif %}</p>
+      <div class="farm-summary-metrics">
+        <div><strong>{{ f.plot_count }}</strong><span>Parcelles rattachées</span></div>
+        <div><strong>{{ "%.2f"|format(f.total_area_ha or 0) }} ha</strong><span>Surface cumulée</span></div>
+      </div>
+      {% if f.plot_count %}
+      <p class="dashboard-linked-label">Parcelles de cette exploitation</p>
+      <ul class="dashboard-linked-plots">
+        {% for p in plots if p.farm_id == f.id %}
+        <li><span>{{ p.name }} <small>({{ p.product }})</small></span><strong>{{ p.area_ha }} ha</strong></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted dashboard-empty-note">Aucune parcelle n'est encore rattachée à cette exploitation.</p>
+      {% endif %}
+      <a class="text-link" href="{{ url_for('plots') }}">Ajouter ou gérer ses parcelles →</a>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="dashboard-empty-state">
+    <h3>Vous n'avez pas encore créé d'exploitation</h3>
+    <p>Commencez par enregistrer le site agricole que vous gérez. Vous pourrez ensuite y rattacher une ou plusieurs parcelles.</p>
+    <a class="button" href="{{ url_for('farm') }}">Créer ma première exploitation</a>
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel dashboard-section">
+  <div class="section-head">
+    <div><p class="eyebrow">NIVEAU 2 · UNITÉS DE TERRAIN</p><h2>Mes parcelles</h2></div>
+    <a href="{{ url_for('plots') }}">Voir toutes les parcelles</a>
+  </div>
+  <p class="dashboard-explainer">Une parcelle est une portion de terrain rattachée à une exploitation. C'est à ce niveau que vous suivez la culture, la superficie et le calendrier agricole.</p>
+  {% if plots %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Parcelle</th><th>Exploitation de rattachement</th><th>Culture</th><th>Superficie</th><th>Plantation</th><th></th></tr></thead>
+      <tbody>
+      {% for p in plots %}
+      <tr>
+        <td><strong>{{ p.name }}</strong></td>
+        <td>{{ p.farm_name }}</td>
+        <td>{{ p.product }}</td>
+        <td>{{ p.area_ha }} ha</td>
+        <td>{{ p.planting_date or 'Non renseignée' }}</td>
+        <td><a href="{{ url_for('campaign', plot_id=p.id) }}">Suivre</a></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="dashboard-empty-state compact">
+    <h3>Aucune parcelle enregistrée</h3>
+    <p>Après avoir créé une exploitation, ajoutez-y les terrains que vous cultivez. Chaque parcelle sera affichée séparément ici.</p>
+    {% if farms %}<a class="button" href="{{ url_for('plots') }}">Ajouter une parcelle</a>{% else %}<a class="button secondary" href="{{ url_for('farm') }}">Commencer par une exploitation</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel dashboard-section">
+  <div class="section-head">
+    <div><p class="eyebrow">VUE D'ENSEMBLE DES CULTURES</p><h2>Répartition de mes cultures</h2></div>
+    <span class="count-pill">{{ plots|length }} parcelle{% if plots|length != 1 %}s{% endif %}</span>
+  </div>
+  {% if crop_rows %}
+  <div class="crop-distribution">
+    {% for crop in crop_rows %}
+    <div class="crop-distribution-row">
+      <div class="crop-distribution-label"><strong>{{ crop.crop }}</strong><span>{{ crop.plot_count }} parcelle{% if crop.plot_count != 1 %}s{% endif %} · {{ "%.2f"|format(crop.area_ha) }} ha</span></div>
+      <div class="crop-bar-track"><span style="width: {{ (crop.area_ha / max_crop_area * 100) if max_crop_area else 0 }}%"></span></div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="dashboard-empty-state compact"><h3>Aucune culture à représenter pour le moment</h3><p>La répartition apparaîtra après l'enregistrement de vos parcelles.</p></div>
+  {% endif %}
+</section>
+<section class="panel dashboard-section">
+  <div class="section-head">
+    <div><p class="eyebrow">ORGANISATION DES CULTURES</p><h2>Prochaines tâches</h2></div>
+    <span class="count-pill">{{ tasks|length }}</span>
+  </div>
+  {% if tasks %}
+  <div class="table-wrap"><table><thead><tr><th>Échéance</th><th>Exploitation</th><th>Parcelle</th><th>Opération</th><th>Statut</th><th></th></tr></thead><tbody>
+  {% for t in tasks %}<tr><td>{{ t.due_date or '—' }}</td><td>{{ t.farm_name }}</td><td>{{ t.plot_name }}</td><td>{{ t.title }}</td><td><span class="status">{{ t.status }}</span></td><td><a href="{{ url_for('campaign', plot_id=t.plot_id) }}">Voir</a></td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}
+  <div class="dashboard-empty-state compact">
+    <h3>Aucune opération planifiée</h3>
+    <p>Les opérations apparaîtront ici lorsque vous aurez créé une parcelle et renseigné sa date de semis ou de plantation.</p>
+    {% if plots %}<a class="button secondary" href="{{ url_for('plots') }}">Compléter les dates de plantation</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Conseils par culture | AgriPredict CI{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Conseils par culture</h1>
+  <form method="get" class="panel compact-form">
+    <label>Culture
+      <select name="product" onchange="this.form.submit()">
+        {% for p in products %}<option value="{{ p }}" {% if p == selected_product %}selected{% endif %}>{{ p }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+  <section class="panel crop-guide-panel">
+    <h2>{{ selected_product }}</h2>
+    <p><strong>Durée du cycle :</strong> {{ guide.cycle }}</p>
+    <h3>Fertilisation et nutrition</h3>
+    <div class="guide-list">
+      {% for title, detail in guide.nutrition %}
+      <article class="guide-step"><h4>{{ title }}</h4><p>{{ detail }}</p></article>
+      {% endfor %}
+    </div>
+    <h3>1. Préparer le champ</h3>
+    <div class="guide-list">
+      {% for period, title, detail in guide.before %}
+      <article class="guide-step"><span class="guide-period">{{ period }}</span><h4>{{ title }}</h4><p>{{ detail }}</p></article>
+      {% endfor %}
+    </div>
+    <h3>2. Conduire la culture</h3>
+    <div class="guide-list">
+      {% for period, title, detail in guide.during %}
+      <article class="guide-step"><span class="guide-period">{{ period }}</span><h4>{{ title }}</h4><p>{{ detail }}</p></article>
+      {% endfor %}
+    </div>
+    <h3>Protection de la culture</h3>
+    <div class="guide-list">
+      {% for title, detail in guide.protection %}
+      <article class="guide-step"><h4>{{ title }}</h4><p>{{ detail }}</p></article>
+      {% endfor %}
+    </div>
+    <h3>Récolte et après-récolte</h3><p>{{ guide.harvest }}</p>
+    <h3>À surveiller</h3><p>{{ guide.watch }}</p>
+    <h3>Références techniques</h3>
+    <ul class="guide-sources">
+      {% for label, url in guide.sources %}<li><a href="{{ url }}" target="_blank" rel="noopener">{{ label }}</a></li>{% endfor %}
+    </ul>
+  </section>
+</section>
+{% endblock %}

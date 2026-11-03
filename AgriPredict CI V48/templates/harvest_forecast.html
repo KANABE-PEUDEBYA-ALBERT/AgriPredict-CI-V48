@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Prévision de récolte · AgriPredict CI{% endblock %}
+{% block content %}
+<section class="narrow">
+  
+  <h1>Estimer ma récolte</h1>
+  
+  
+  {% if error %}<div class="flash danger">{{ error }}</div>{% endif %}
+  <form method="post" class="panel">
+    {% if plots %}<label>Utiliser une parcelle déjà enregistrée (facultatif)<select name="plot_id"><option value="">Saisie manuelle</option>{% for p in plots %}<option value="{{ p.id }}" {% if form.plot_id|string == p.id|string %}selected{% endif %}>{{ p.name }} — {{ p.product }} · {{ p.area_ha }} ha ({{ p.region }})</option>{% endfor %}</select></label>{% endif %}
+    <div class="two-col">
+      <label>Culture<select name="culture" required>{% for c in harvest_crops %}<option value="{{ c }}" {% if form.culture == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+      <label>Région<select name="region" required>{% for r in harvest_regions %}<option value="{{ r }}" {% if form.region == r %}selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
+      <label>Superficie (hectares)<input name="superficie_ha" type="number" min="0.01" max="10000" step="0.01" required value="{{ form.superficie_ha }}"></label>
+      <label>Pluviométrie estimée (mm)<input name="pluviometrie_mm" type="number" min="0" max="5000" step="1" required value="{{ form.pluviometrie_mm }}"></label>
+      <label>Type de sol<select name="type_sol">{% for v in harvest_soils %}<option {% if form.type_sol == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+      <label>Semences<select name="type_semences">{% for v in harvest_seeds %}<option {% if form.type_semences == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></label>
+      <label>Engrais (kg/ha)<input name="engrais_kg_ha" type="number" min="0" max="2000" step="0.1" required value="{{ form.engrais_kg_ha }}"></label>
+      <label>Irrigation<select name="irrigation"><option {% if form.irrigation == 'Non' %}selected{% endif %}>Non</option><option {% if form.irrigation == 'Oui' %}selected{% endif %}>Oui</option></select></label>
+      <label>Pratique agricole<select name="pratique_agricole"><option {% if form.pratique_agricole == 'Traditionnelle' %}selected{% endif %}>Traditionnelle</option><option {% if form.pratique_agricole == 'Améliorée' %}selected{% endif %}>Améliorée</option></select></label>
+      <label>Campagne agricole<select name="campagne_agricole">{% for c in ['2021-2022','2022-2023','2023-2024','2024-2025','2025-2026'] %}<option {% if form.campagne_agricole == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+    </div>
+    <button class="button" type="submit">Calculer l’estimation</button>
+  </form>
+  {% if prediction %}
+  <section class="panel answer">
+    <p class="eyebrow">RÉSULTAT · {{ prediction.culture }}</p>
+    <h2>Estimation pour {{ prediction.area_ha }} hectare(s)</h2>
+    <div class="stats"><div class="stat"><span>Rendement estimé</span><strong>{{ prediction.yield_t_ha }} t/ha</strong></div><div class="stat"><span>Production estimée</span><strong>{{ prediction.production_t }} t</strong></div></div>
+    <p>Calcul de production : superficie × rendement estimé.</p>
+    {% if prediction.model_info.source_donnees == 'SIMULÉES' %}
+      <span class="status">Données simulées</span>
+    {% endif %}
+
+  </section>
+  {% endif %}
+  
+</section>
+{% endblock %}

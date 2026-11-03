@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% block title %}Exploitations | AgriPredict CI<script type="application/json" id="farmLocationCatalog">{{ location_catalog|tojson }}</script>
+<script>
+(function () {
+  const catalogNode = document.getElementById("farmLocationCatalog");
+  if (!catalogNode) return;
+  const catalog = JSON.parse(catalogNode.textContent || "[]");
+  const region = document.getElementById("farmRegion");
+  const department = document.getElementById("farmDepartment");
+  const locality = document.getElementById("farmLocality");
+  const neighborhood = document.getElementById("farmNeighborhood");
+  const otherBox = document.getElementById("farmOtherLocation");
+  const hidden = {
+    department: document.getElementById("farmDepartmentValue"),
+    locality: document.getElementById("farmLocalityValue"),
+    neighborhood: document.getElementById("farmNeighborhoodValue")
+  };
+  function fill(select, values, placeholder) {
+    select.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = ""; first.textContent = placeholder; select.appendChild(first);
+    [...new Set(values.filter(Boolean))].sort().forEach(value => {
+      const option = document.createElement("option");
+      option.value = value; option.textContent = value; select.appendChild(option);
+    });
+    const other = document.createElement("option");
+    other.value = "__other__"; other.textContent = "Autre (saisir manuellement)";
+    select.appendChild(other);
+  }
+  function update() {
+    const rows = catalog.filter(row => row.region === region.value);
+    fill(department, rows.map(row => row.department), "Choisir un département");
+    fill(locality, [], "Choisir un département d'abord");
+    fill(neighborhood, [], "Choisir une localité d'abord");
+    otherBox.hidden = false;
+    sync();
+  }
+  function sync() {
+    const d = department.value;
+    let l = locality.value;
+    let n = neighborhood.value;
+    const rows = catalog.filter(row => row.region === region.value);
+    if (d === "__other__") {
+      fill(locality, [], "Préciser une localité");
+      fill(neighborhood, [], "Préciser un quartier");
+      l = ""; n = "";
+    } else if (d) {
+      const localities = rows.filter(row => row.department === d).map(row => row.locality);
+      if (![...locality.options].some(option => option.value === l)) l = "";
+      fill(locality, localities, "Choisir une ville / localité");
+      locality.value = l;
+      if (l === "__other__") {
+        fill(neighborhood, [], "Préciser un quartier");
+        n = "";
+      } else if (l) {
+        const neighborhoods = rows.filter(row => row.department === d && row.locality === l).map(row => row.neighborhood);
+        if (![...neighborhood.options].some(option => option.value === n)) n = "";
+        fill(neighborhood, neighborhoods, "Choisir un quartier");
+        neighborhood.value = n;
+      } else {
+        fill(neighborhood, [], "Choisir une localité d'abord");
+        n = "";
+      }
+    } else {
+      fill(locality, [], "Choisir un département d'abord");
+      fill(neighborhood, [], "Choisir une localité d'abord");
+      l = ""; n = "";
+    }
+    hidden.department.value = d === "__other__" ? document.getElementById("otherDepartment").value : d;
+    hidden.locality.value = l === "__other__" ? document.getElementById("otherLocality").value : l;
+    hidden.neighborhood.value = n === "__other__" ? document.getElementById("otherNeighborhood").value : n;
+    const other = d === "__other__" || l === "__other__" || n === "__other__";
+    otherBox.hidden = !other;
+  }
+  region.addEventListener("change", update);
+  department.addEventListener("change", sync);
+  locality.addEventListener("change", sync);
+  neighborhood.addEventListener("change", sync);
+  ["otherDepartment","otherLocality","otherNeighborhood"].forEach(id => {
+    document.getElementById(id).addEventListener("input", sync);
+  });
+  update();
+  document.querySelector(".farm-layout form").addEventListener("submit", function () {
+    sync();
+  });
+})();
+</script>
+{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">MON ESPACE AGRICOLE</p><h1>Mes exploitations</h1><p>Gérez vos sites agricoles et consultez les parcelles qui leur sont rattachées. Les suggestions reprennent les localités déjà enregistrées ; vous pouvez saisir une nouvelle localité.</p></div>
+</section>
+<div class="two-col farm-layout">
+  <section class="panel">
+    <h2>Ajouter une exploitation</h2>
+    <form method="post">
+      <label>Nom de l'exploitation<input name="name" required placeholder="Ex. : Ferme familiale"></label>
+      <label>Région
+        <select name="region" id="farmRegion" required>
+          <option value="">Choisir une région</option>
+          {% for region in known_regions %}<option value="{{ region }}">{{ region }}</option>{% endfor %}
+          {% for region in geo_regions if region not in known_regions %}
+          <option value="{{ region }}">{{ region }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Département
+        <select id="farmDepartment"><option value="">Choisir une région d'abord</option></select>
+      </label>
+      <label>Ville, commune ou village
+        <select id="farmLocality"><option value="">Choisir un département d'abord</option></select>
+      </label>
+      <label>Quartier / hameau
+        <select id="farmNeighborhood"><option value="">Choisir une localité d'abord</option></select>
+      </label>
+      <p class="location-catalog-note">Les listes proposent les localités déjà enregistrées dans votre compte. Pour une localité absente, choisissez « Autre » et précisez-la.</p>
+      <div id="farmOtherLocation" class="farm-other-location" hidden>
+        <label>Préciser le département (si nécessaire)<input id="otherDepartment" type="text" placeholder="Département"></label>
+        <label>Préciser la ville, commune ou village<input id="otherLocality" type="text" placeholder="Localité"></label>
+        <label>Préciser le quartier / hameau<input id="otherNeighborhood" type="text" placeholder="Quartier ou hameau"></label>
+      </div>
+      <input type="hidden" name="department" id="farmDepartmentValue">
+      <input type="hidden" name="locality" id="farmLocalityValue">
+      <input type="hidden" name="neighborhood" id="farmNeighborhoodValue">
+      <button class="button" type="submit">Enregistrer</button>
+    </form>
+  </section>
+  <section class="panel farm-list-panel">
+    <div class="section-head"><h2>Exploitations enregistrées</h2><span class="count-pill">{{ farms|length }}</span></div>
+    {% if farms %}
+    <div class="farm-list">
+      {% for f in farms %}
+      <div class="farm-list-row">
+        <div class="farm-list-main">
+          <strong>{{ f.name }}</strong>
+          <span>{{ f.region }}{% if f.department %} · {{ f.department }}{% endif %}{% if f.locality %} · {{ f.locality }}{% endif %}{% if f.neighborhood %} · {{ f.neighborhood }}{% endif %}</span>
+          <div class="farm-summary-metrics compact">
+            <div><strong>{{ f.plot_count }}</strong><span>Parcelles rattachées</span></div>
+            <div><strong>{{ "%.2f"|format(f.total_area_ha or 0) }} ha</strong><span>Surface cumulée</span></div>
+          </div>
+          <small>Une exploitation peut regrouper plusieurs parcelles distinctes.</small>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">Aucune exploitation enregistrée.</p>
+    {% endif %}
+  </section>
+</div>
+<script type="application/json" id="farmLocationCatalog">{{ location_catalog|tojson }}</script>
+<script>
+(function () {
+  const catalogNode = document.getElementById("farmLocationCatalog");
+  if (!catalogNode) return;
+  const catalog = JSON.parse(catalogNode.textContent || "[]");
+  const region = document.getElementById("farmRegion");
+  const department = document.getElementById("farmDepartment");
+  const locality = document.getElementById("farmLocality");
+  const neighborhood = document.getElementById("farmNeighborhood");
+  const otherBox = document.getElementById("farmOtherLocation");
+  const hidden = {
+    department: document.getElementById("farmDepartmentValue"),
+    locality: document.getElementById("farmLocalityValue"),
+    neighborhood: document.getElementById("farmNeighborhoodValue")
+  };
+  function fill(select, values, placeholder) {
+    select.innerHTML = "";
+    const first = document.createElement("option");
+    first.value = ""; first.textContent = placeholder; select.appendChild(first);
+    [...new Set(values.filter(Boolean))].sort().forEach(value => {
+      const option = document.createElement("option");
+      option.value = value; option.textContent = value; select.appendChild(option);
+    });
+    const other = document.createElement("option");
+    other.value = "__other__"; other.textContent = "Autre (saisir manuellement)";
+    select.appendChild(other);
+  }
+  function update() {
+    const rows = catalog.filter(row => row.region === region.value);
+    fill(department, rows.map(row => row.department), "Choisir un département");
+    fill(locality, [], "Choisir un département d'abord");
+    fill(neighborhood, [], "Choisir une localité d'abord");
+    otherBox.hidden = false;
+    sync();
+  }
+  function sync() {
+    const d = department.value;
+    let l = locality.value;
+    let n = neighborhood.value;
+    const rows = catalog.filter(row => row.region === region.value);
+    if (d === "__other__") {
+      fill(locality, [], "Préciser une localité");
+      fill(neighborhood, [], "Préciser un quartier");
+      l = ""; n = "";
+    } else if (d) {
+      const localities = rows.filter(row => row.department === d).map(row => row.locality);
+      if (![...locality.options].some(option => option.value === l)) l = "";
+      fill(locality, localities, "Choisir une ville / localité");
+      locality.value = l;
+      if (l === "__other__") {
+        fill(neighborhood, [], "Préciser un quartier");
+        n = "";
+      } else if (l) {
+        const neighborhoods = rows.filter(row => row.department === d && row.locality === l).map(row => row.neighborhood);
+        if (![...neighborhood.options].some(option => option.value === n)) n = "";
+        fill(neighborhood, neighborhoods, "Choisir un quartier");
+        neighborhood.value = n;
+      } else {
+        fill(neighborhood, [], "Choisir une localité d'abord");
+        n = "";
+      }
+    } else {
+      fill(locality, [], "Choisir un département d'abord");
+      fill(neighborhood, [], "Choisir une localité d'abord");
+      l = ""; n = "";
+    }
+    hidden.department.value = d === "__other__" ? document.getElementById("otherDepartment").value : d;
+    hidden.locality.value = l === "__other__" ? document.getElementById("otherLocality").value : l;
+    hidden.neighborhood.value = n === "__other__" ? document.getElementById("otherNeighborhood").value : n;
+    const other = d === "__other__" || l === "__other__" || n === "__other__";
+    otherBox.hidden = !other;
+  }
+  region.addEventListener("change", update);
+  department.addEventListener("change", sync);
+  locality.addEventListener("change", sync);
+  neighborhood.addEventListener("change", sync);
+  ["otherDepartment","otherLocality","otherNeighborhood"].forEach(id => {
+    document.getElementById(id).addEventListener("input", sync);
+  });
+  update();
+  document.querySelector(".farm-layout form").addEventListener("submit", function () {
+    sync();
+  });
+})();
+</script>
+{% endblock %}

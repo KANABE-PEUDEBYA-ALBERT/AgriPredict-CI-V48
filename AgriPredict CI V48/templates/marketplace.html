@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Vente agricole · AgriPredict CI{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">DU CHAMP AU MARCHÉ</p><h1>Marché agricole</h1></div><span class="status">{{ listings|length }} annonce(s) affichée(s)</span></div>
+
+<div class="two-col">
+<section class="panel"><h2>Publier une récolte</h2>{% if current_user %}<form method="post">
+<label>Produit<select name="product" required>{% for product in products %}<option>{{ product }}</option>{% endfor %}</select></label>
+<label>Quantité disponible (kg)<input name="quantity_kg" type="number" min="1" step="0.1" required></label>
+<label>Prix demandé (FCFA/kg)<input name="asking_price_fcfa_kg" type="number" min="1" step="1" required></label>
+<label>Région<input name="region" required placeholder="Ex. : Haut-Sassandra"></label>
+<label>Localité / marché<input name="locality" placeholder="Ville, village ou marché"></label>
+<label>Contact du vendeur<input name="contact" required placeholder="Téléphone ou autre contact à partager"></label>
+<label>Description<textarea name="description" rows="3" placeholder="Qualité, période de disponibilité, conditionnement…"></textarea></label>
+<button class="button">Publier l'annonce</button></form>{% else %}<p>Connectez-vous pour proposer une récolte à la vente.</p><a class="button" href="{{ url_for('login') }}">Connexion</a>{% endif %}</section>
+<section><h2>Prix moyens</h2>{% if suggestions %}<div class="table-wrap"><table><thead><tr><th>Produit</th><th>Moyenne observée</th><th>Observations</th><th>Dernière date</th></tr></thead><tbody>{% for product, item in suggestions.items() %}<tr><td>{{ product }}</td><td>{{ '%.0f'|format(item.avg_price) }} FCFA/kg</td><td>{{ item.n }}</td><td>{{ item.latest }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">Aucune observation de prix n'est encore importée. Les prix de référence apparaîtront après l'import de données vérifiables.</p>{% endif %}</section>
+</div>
+<section><div class="page-heading"><h2>Annonces de vente</h2><form class="filter-form" method="get"><label>Filtrer par culture<select name="product"><option value="">Toutes les cultures</option>{% for product in products %}<option value="{{ product }}" {% if product_filter==product %}selected{% endif %}>{{ product }}</option>{% endfor %}</select></label><button class="button secondary">Filtrer</button></form></div>
+{% if listings %}<div class="cards">{% for item in listings %}<article class="panel"><p class="eyebrow">{{ item.region }}{% if item.locality %} · {{ item.locality }}{% endif %}</p><h3>{{ item.product }}</h3><p class="listing-price">{{ '%.0f'|format(item.asking_price_fcfa_kg) }} <span>FCFA/kg</span></p><p>Quantité : <strong>{{ '%.1f'|format(item.quantity_kg) }} kg</strong></p>{% if item.description %}<p>{{ item.description }}</p>{% endif %}<p class="muted">Vendeur : {{ item.seller_name }} · {{ item.created_at[:10] }}</p><p><strong>Contact :</strong> {{ item.contact }}</p>{% if current_user and current_user.id == item.user_id %}<form method="post" action="{{ url_for('update_listing_status', listing_id=item.id) }}"><label>Statut de l'annonce<select name="status"><option>Disponible</option><option>Vendu</option><option>Retiré</option></select></label><button class="button small">Mettre à jour</button></form>{% endif %}</article>{% endfor %}</div>{% else %}<p class="muted">Aucune annonce disponible pour ce filtre. Les annonces publiées ici sont fournies par les utilisateurs, pas inventées.</p>{% endif %}</section>
+{% endblock %}

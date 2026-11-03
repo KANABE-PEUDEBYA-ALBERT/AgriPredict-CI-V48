@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %}Simulateur de production · AgriPredict CI{% endblock %}
+{% block content %}
+<section class="production-simulator-page">
+  <header class="production-simulator-intro">
+    <span class="section-index">OUTIL D'AIDE À LA DÉCISION AGRICOLE</span>
+    <h1>Simuler ma production</h1>
+    <p>Renseignez votre culture, votre région et les intrants prévus pour estimer les besoins de votre parcelle et obtenir une indication de récolte.</p>
+  </header>
+  {% if error %}<div class="flash danger" role="alert">{{ error }}</div>{% endif %}
+  <div class="production-simulator-layout">
+    <form method="post" class="production-simulator-form">
+      <section class="sim-form-section">
+        <div class="sim-section-heading"><span>01</span><div><h2>Ma parcelle</h2><p>Localisation et superficie cultivée</p></div></div>
+        <div class="sim-map-selection" id="simMapSelection">
+          <div><strong>Définir la superficie depuis la carte</strong><p>Sélectionnez une parcelle enregistrée ou dessinez directement ses limites. La superficie mesurée sur la carte sera utilisée pour tous les calculs.</p></div>
+          <a class="button sim-map-button" href="{{ url_for('agricultural_map', select_for='simulator') }}"> <span aria-hidden="true">⌖</span> Sélectionner ma parcelle sur la carte</a>
+          <p class="sim-map-selected" id="simMapSelected" hidden></p>
+          <button class="sim-map-clear" id="clearMapSelection" type="button" hidden>Retirer la parcelle sélectionnée</button>
+          <input type="hidden" name="map_geometry" id="mapGeometry" value="{{ form.map_geometry }}">
+          <input type="hidden" name="map_plot_id" id="mapPlotId" value="{{ form.map_plot_id }}">
+          <input type="hidden" name="map_region" id="mapRegion" value="{{ form.map_region }}">
+        </div>
+        <div class="sim-form-grid">
+          <label>Culture
+            <select name="culture" required>{% for c in harvest_crops %}<option value="{{ c }}" {% if form.culture == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select>
+          </label>
+          <label>Région de Côte d'Ivoire
+            <select name="region" required>{% for r in harvest_regions %}<option value="{{ r }}" {% if form.region == r %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+          </label>
+          <label class="full-field">Superficie à cultiver (hectares)
+            <input name="superficie_ha" id="simAreaHa" type="number" min="0.01" max="1000" step="0.0001" required value="{{ form.superficie_ha }}" {% if form.map_geometry %}readonly{% endif %}>
+            <small id="simAreaHelp">La superficie maximale autorisée est de 1 000 hectares. Si vous choisissez une parcelle sur la carte, sa surface mesurée remplacera cette valeur.</small>
+          </label>
+          <label class="full-field">Pluviométrie cumulée ou prévue (mm)
+            <input name="pluviometrie_mm" type="number" min="0" max="5000" step="1" required value="{{ form.pluviometrie_mm }}" placeholder="Valeur issue d'un bulletin météo">
+            <small>À renseigner à partir d'une mesure locale ou d'un bulletin météorologique. La région seule ne permet pas de connaître la pluie réellement reçue par votre parcelle.</small>
+          </label>
+        </div>
+      </section>
+      <section class="sim-form-section">
+        <div class="sim-section-heading"><span>02</span><div><h2>Semences et fertilisation</h2><p>Vous pouvez laisser ces informations vides si vous ne les connaissez pas.</p></div></div>
+        <div class="sim-simple-help">
+          <strong>Vous n'avez pas besoin de connaître toutes les doses.</strong>
+          <p>Indiquez uniquement les quantités inscrites sur votre sac de semences ou votre conseil d'approvisionnement. Si vous ne les connaissez pas, laissez les champs facultatifs vides : l'application ne devinera pas les doses.</p>
+        </div>
+        <details class="sim-advanced-inputs">
+          <summary>Renseigner les détails des semences et des engrais (facultatif)</summary>
+          <div class="sim-form-grid">
+            <label>Type de semences
+              <select name="type_semences">{% for v in harvest_seeds %}<option value="{{ v }}" {% if form.type_semences == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+              <small>Choisissez cette information si elle figure sur l'emballage ou vous a été communiquée.</small>
+            </label>
+            <label>Quantité de semences (kg/ha)
+              <input name="semences_kg_ha" type="number" min="0" max="500" step="0.1" value="{{ form.semences_kg_ha }}" placeholder="Laisser vide si inconnu">
+              <small>Cette dose se trouve parfois sur l'étiquette du sac ou dans la fiche technique de la variété.</small>
+            </label>
+            <label>Type d'engrais
+              <select name="type_engrais">{% for v in ['NPK','Urée','Compost','Fumure organique','Autre / non précisé'] %}<option value="{{ v }}" {% if form.type_engrais == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+            </label>
+            <label>Quantité d'engrais (kg/ha)
+              <input name="engrais_kg_ha" type="number" min="0" max="2000" step="0.1" value="{{ form.engrais_kg_ha }}" placeholder="Laisser vide si inconnu">
+              <small>À relever sur la recommandation d'un agent agricole ou d'une notice adaptée à votre culture et votre sol. Ne choisissez pas une dose au hasard.</small>
+            </label>
+            <label>Type de sol
+              <select name="type_sol">{% for v in harvest_soils %}<option value="{{ v }}" {% if form.type_sol == v %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+              <small>Si vous ne connaissez pas le type exact, conservez le choix proposé.</small>
+            </label>
+            <label>Irrigation
+              <select name="irrigation"><option value="Non" {% if form.irrigation == 'Non' %}selected{% endif %}>Non</option><option value="Oui" {% if form.irrigation == 'Oui' %}selected{% endif %}>Oui</option></select>
+            </label>
+            <label class="full-field">Conduite culturale
+              <select name="pratique_agricole"><option value="Traditionnelle" {% if form.pratique_agricole == 'Traditionnelle' %}selected{% endif %}>Traditionnelle</option><option value="Améliorée" {% if form.pratique_agricole == 'Améliorée' %}selected{% endif %}>Améliorée</option></select>
+            </label>
+          </div>
+        </details>
+      </section>
+      <button class="button production-sim-submit" type="submit">Calculer ma simulation <span>→</span></button>
+    </form>
+    <aside class="production-simulator-side">
+      <div class="sim-side-card">
+        <span class="sim-side-kicker">COMMENT ÇA MARCHE ?</span>
+        <h2>Préparer sa campagne</h2>
+        <p>La superficie et les doses par hectare servent à calculer les quantités totales d'intrants nécessaires.</p>
+        <ul>
+          <li>Semences totales = superficie × dose de semences</li>
+          <li>Engrais total = superficie × dose d'engrais</li>
+          <li>Production estimée = superficie × rendement estimé</li>
+        </ul>
+      </div>
+      <div class="sim-side-note">
+        <strong>À propos de la pluviométrie</strong>
+        <p>Les données du prototype ne sont pas des relevés météorologiques régionaux observés. Saisissez une mesure issue d'une station ou d'un bulletin local. La dose de semences sert au calcul des besoins totaux ; elle n'entre pas encore dans le modèle de rendement.</p>
+      </div>
+    </aside>
+  </div>
+  {% if prediction %}
+  <section class="production-results" aria-live="polite">
+    <div class="production-results-heading">
+      <div><span class="section-index">RÉSULTATS DE LA SIMULATION</span><h2>{{ prediction.culture }} · {{ prediction.region }}</h2><p>{{ prediction.area_ha }} hectare(s) pris en compte{% if prediction.map_selected %} · superficie calculée depuis la carte{% endif %}</p></div>
+      <span class="result-chip">Estimation indicative</span>
+    </div>
+    <div class="production-result-grid">
+      <article class="production-result-main"><span>Production totale estimée</span><strong>{{ "{:,.0f}".format(prediction.production_kg).replace(",", " ") }} <small>kg</small></strong><p>Soit environ {{ prediction.production_t }} tonne(s)</p></article>
+      <article class="production-result-card"><span>Rendement estimé</span><strong>{{ prediction.yield_t_ha }} t/ha</strong><small>Par hectare</small></article>
+      <article class="production-result-card"><span>Semences à prévoir</span><strong>{% if prediction.seed_rate_provided %}{{ "{:,.1f}".format(prediction.seed_total_kg).replace(",", " ") }} kg{% else %}Non renseignées{% endif %}</strong><small>{% if prediction.seed_rate_provided %}{{ prediction.seed_rate }} kg/ha{% else %}Dose non communiquée{% endif %}</small></article>
+      <article class="production-result-card"><span>Engrais à prévoir</span><strong>{% if prediction.fertilizer_rate_provided %}{{ "{:,.1f}".format(prediction.fertilizer_total_kg).replace(",", " ") }} kg{% else %}Non renseigné{% endif %}</strong><small>{% if prediction.fertilizer_rate_provided %}{{ prediction.fertilizer_type }} · {{ prediction.fertilizer_rate }} kg/ha{% else %}Dose non communiquée{% endif %}</small></article>
+    </div>
+    <div class="production-result-details">
+      <div><span>Pluviométrie renseignée</span><strong>{{ prediction.rainfall_mm }} mm</strong></div>
+      <div><span>Superficie</span><strong>{{ prediction.area_ha }} ha</strong></div>
+      <div><span>Région</span><strong>{{ prediction.region }}</strong></div>
+    </div>
+    {% if prediction.model_info.source_donnees == 'SIMULÉES' %}
+    <div class="model-warning"><strong>Attention — modèle expérimental</strong>Cette estimation repose sur un jeu de données artificielles, et non sur des récoltes observées et validées en Côte d'Ivoire. Elle sert uniquement à tester le fonctionnement du simulateur : ne l'utilisez pas comme prévision fiable pour engager des dépenses ou planifier une récolte. Le type d'engrais et la dose de semences ne sont pas encore des variables du modèle de rendement ; leurs quantités totales sont calculées séparément.</div>
+    {% else %}
+    <div class="model-warning"><strong>À interpréter avec prudence</strong><p>Le modèle doit être évalué régulièrement sur des récoltes réelles locales avant toute utilisation opérationnelle.</p></div>
+    {% endif %}
+  </section>
+  {% endif %}
+</section>
+<script>
+(() => {
+  const geometryInput = document.getElementById('mapGeometry');
+  const areaInput = document.getElementById('simAreaHa');
+  const plotInput = document.getElementById('mapPlotId');
+  const regionInput = document.getElementById('mapRegion');
+  const regionSelect = document.querySelector('select[name="region"]');
+  const selectedText = document.getElementById('simMapSelected');
+  const clearButton = document.getElementById('clearMapSelection');
+  const form = document.querySelector('.production-simulator-form');
+  if (!geometryInput || !areaInput) return;
+  function displaySelection(data) {
+    geometryInput.value = JSON.stringify(data.geometry);
+    plotInput.value = data.plot_id || '';
+    regionInput.value = data.region || '';
+    areaInput.value = Number(data.area_ha).toFixed(4);
+    areaInput.readOnly = true;
+    if (data.region && Array.from(regionSelect.options).some(o => o.value === data.region)) {
+      regionSelect.value = data.region; regionSelect.disabled = true;
+      let regionMirror = document.getElementById('mapRegionMirror');
+      if (!regionMirror) { regionMirror = document.createElement('input'); regionMirror.type = 'hidden'; regionMirror.name = 'region'; regionMirror.id = 'mapRegionMirror'; form.appendChild(regionMirror); }
+      regionMirror.value = data.region;
+    }
+    selectedText.textContent = `Parcelle sélectionnée : ${data.name || 'Nouvelle parcelle'} · ${Number(data.area_ha).toFixed(4)} ha`;
+    selectedText.hidden = false;
+    clearButton.hidden = false;
+    document.getElementById('simAreaHelp').textContent = 'Superficie calculée automatiquement depuis le contour de la carte. Elle ne peut pas être modifiée manuellement.';
+  }
+  const saved = sessionStorage.getItem('agripredict_map_selection');
+  if (saved) {
+    try { displaySelection(JSON.parse(saved)); } catch (e) { console.warn('Sélection de carte illisible', e); }
+  } else if (geometryInput.value) {
+    try {
+      const g = JSON.parse(geometryInput.value);
+      selectedText.textContent = 'Parcelle sélectionnée sur la carte · contour conservé';
+      selectedText.hidden = false; clearButton.hidden = false; areaInput.readOnly = true;
+      if (regionInput.value && Array.from(regionSelect.options).some(o => o.value === regionInput.value)) { regionSelect.value = regionInput.value; regionSelect.disabled = true; const mirror = document.createElement('input'); mirror.type = 'hidden'; mirror.name = 'region'; mirror.id = 'mapRegionMirror'; mirror.value = regionInput.value; form.appendChild(mirror); }
+    } catch (e) { geometryInput.value = ''; }
+  }
+  clearButton.addEventListener('click', () => {
+    geometryInput.value = ''; plotInput.value = ''; regionInput.value = ''; sessionStorage.removeItem('agripredict_map_selection');
+    areaInput.readOnly = false; areaInput.value = '1'; regionSelect.disabled = false;
+    const regionMirror = document.getElementById('mapRegionMirror'); if (regionMirror) regionMirror.remove();
+    selectedText.hidden = true; clearButton.hidden = true;
+    document.getElementById('simAreaHelp').textContent = 'La superficie maximale autorisée est de 1 000 hectares. Si vous choisissez une parcelle sur la carte, sa surface mesurée remplacera cette valeur.';
+  });
+  form.addEventListener('submit', () => { if (geometryInput.value) areaInput.readOnly = true; sessionStorage.removeItem('agripredict_map_selection'); });
+})();
+</script>
+{% endblock %}

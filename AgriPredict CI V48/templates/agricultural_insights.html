@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Repères agricoles · AgriPredict CI{% endblock %}
+{% block content %}
+<section class="hero">
+ <div><p class="eyebrow">REPÈRES AGRICOLES NATIONAUX</p><h1>Mieux comprendre l’agriculture ivoirienne.</h1><p>Quelques chiffres de référence issus du rapport d’analyse des résultats de l’Enquête Agricole Annuelle (EAA) 2024-2025, pour situer les filières et éclairer les décisions des producteurs.</p></div>
+ <div class="hero-card"><span class="status">Source statistique officielle</span><h2>À quoi servent ces données ?</h2><p><a class="text-link" href="https://nada.anstat.ci/index.php/catalog/34/" target="_blank" rel="noopener noreferrer">Consulter la fiche EAA 2024-2025 ↗</a></p></div>
+</section>
+<section><div class="page-heading"><div><p class="eyebrow">CHIFFRES CLÉS</p><h2>La structure agricole en bref</h2></div><span class="status">EAA 2024-2025</span></div>
+ <div class="cards">
+ {% for item in indicators %}<article class="stat"><span>{{ item.label }}</span><strong>{{ item.value }}</strong><p>{{ item.detail }}</p></article>{% endfor %}
+ </div>
+</section>
+<section><div class="page-heading"><div><p class="eyebrow">CULTURES VIVRIÈRES</p><h2>Principales productions rapportées</h2><p>Quantités nationales en tonnes, selon le rapport.</p></div></div>
+ <div class="table-wrap"><table><thead><tr><th>Culture</th><th>Production (tonnes)</th></tr></thead><tbody>{% for name, value in food_crops %}<tr><td>{{ name }}</td><td><strong>{{ '{:,.0f}'.format(value).replace(',', ' ') }}</strong></td></tr>{% endfor %}</tbody></table></div>
+ 
+</section>
+<section><div class="page-heading"><div><p class="eyebrow">CULTURES DE RENTE</p><h2>Principales productions de rente</h2><p>Quantités nationales en tonnes, selon le rapport.</p></div></div>
+ <div class="table-wrap"><table><thead><tr><th>Culture</th><th>Production (tonnes)</th></tr></thead><tbody>{% for name, value in cash_crops %}<tr><td>{{ name }}</td><td><strong>{{ '{:,.0f}'.format(value).replace(',', ' ') }}</strong></td></tr>{% endfor %}</tbody></table></div>
+ 
+</section>
+
+
+{% endblock %}

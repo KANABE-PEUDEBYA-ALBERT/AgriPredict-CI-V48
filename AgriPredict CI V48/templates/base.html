@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06291f">
+<title>{% block title %}AgriPredict CI{% endblock %}</title>
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="topbar">
+ <a class="brand brand-image" href="{{ url_for('index') }}" aria-label="Accueil AgriPredict CI">
+  <img class="brand-logo" src="{{ url_for('static', filename='agripredict_ci_logo.png') }}" alt="AgriPredict CI">
+ </a>
+ <nav class="main-nav" aria-label="Navigation principale">
+  <a class="nav-link nav-home" href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}aria-current="page"{% endif %}>Accueil</a>
+  <details class="nav-group">
+   <summary>Exploitations <span aria-hidden="true">⌄</span></summary>
+   <div class="nav-menu"><a href="{{ url_for('farm') }}">Mes exploitations</a><a href="{{ url_for('plots') }}">Mes parcelles</a><a href="{{ url_for('agricultural_map') }}">Carte agricole</a></div>
+  </details>
+  <details class="nav-group">
+   <summary>Production <span aria-hidden="true">⌄</span></summary>
+   <div class="nav-menu">
+    {% if current_user %}<a href="{{ url_for('dashboard') }}">Tableau de bord producteur</a><a href="{{ url_for('plots') }}">Suivi des parcelles</a>
+    {% else %}<a href="{{ url_for('login') }}">Se connecter pour suivre ma production</a>{% endif %}
+   </div>
+  </details>
+  <details class="nav-group">
+   <summary>Prévisions <span aria-hidden="true">⌄</span></summary>
+   <div class="nav-menu">
+    {% if current_user %}<a href="{{ url_for('simulator') }}">Estimer ma récolte</a>
+    {% else %}<a href="{{ url_for('login') }}">Se connecter pour estimer ma récolte</a>{% endif %}
+   </div>
+  </details>
+  <details class="nav-group">
+   <summary>Conseils <span aria-hidden="true">⌄</span></summary>
+   <div class="nav-menu">
+    {% if current_user %}<a href="{{ url_for('crop_guide') }}">Guides des cultures</a><a href="{{ url_for('advisor') }}">Conseiller agricole</a>
+    {% else %}<a href="{{ url_for('login') }}">Se connecter pour consulter les conseils</a>{% endif %}
+   </div>
+  </details>
+  <a class="nav-link" href="{{ url_for('about') }}" {% if request.endpoint == 'about' %}aria-current="page"{% endif %}>À propos</a>
+  {% if current_user %}<a class="nav-link nav-account" href="{{ url_for('logout') }}">Déconnexion</a>
+  {% else %}<a class="nav-link nav-account" href="{{ url_for('login') }}">Se connecter/s'inscrire</a>{% endif %}
+ </nav>
+</header>
+<main class="container">
+{% if request.endpoint != 'index' %}<div class="page-navigation"><a class="back-link click-feedback" href="javascript:history.back()" onclick="if (history.length <= 1) { window.location.href='{{ url_for("index") }}'; return false; }" aria-label="Revenir à la page précédente"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18 9 12l6-6"/></svg><span>Retour</span></a><a class="home-link click-feedback" href="{{ url_for('index') }}" aria-label="Accueil"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z"/></svg><span>Accueil</span></a></div>{% endif %}
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flashes">{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+{% block content %}{% endblock %}
+</main>
+<footer class="site-footer"><strong>AgriPredict CI</strong></footer>
+<script>
+(function () {
+  // Un seul menu déroulant peut rester ouvert à la fois.
+  const navGroups = Array.from(document.querySelectorAll(".main-nav details.nav-group"));
+  navGroups.forEach(function (group) {
+    group.addEventListener("toggle", function () {
+      if (!group.open) return;
+      navGroups.forEach(function (other) {
+        if (other !== group) other.open = false;
+      });
+    });
+  });
+
+  // Fermer les menus dès qu'un lien de navigation est choisi.
+  document.querySelectorAll(".main-nav .nav-menu a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      navGroups.forEach(function (group) { group.open = false; });
+    });
+  });
+
+  // Cliquer hors de la navigation referme également le menu actif.
+  document.addEventListener("click", function (event) {
+    if (!event.target.closest(".main-nav")) {
+      navGroups.forEach(function (group) { group.open = false; });
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") navGroups.forEach(function (group) { group.open = false; });
+  });
+
+  // Aligner le titre principal et les boutons Retour/Accueil sur une seule ligne.
+  const pageNav = document.querySelector("main.container > .page-navigation");
+  if (pageNav) {
+    const main = document.querySelector("main.container");
+    let heading = main.querySelector(":scope > .page-heading, :scope > .production-simulator-page > .production-simulator-intro, :scope > .narrow > h1, :scope > h1");
+    if (heading) {
+      if (heading.tagName === "H1") {
+        const row = document.createElement("div");
+        row.className = "page-topline standalone-title-row";
+        heading.parentNode.insertBefore(row, heading);
+        row.appendChild(heading);
+        row.appendChild(pageNav);
+      } else {
+        heading.classList.add("page-topline");
+        heading.appendChild(pageNav);
+      }
+    }
+  }
+
+  document.querySelectorAll(".page-navigation .click-feedback").forEach(function (button) {
+    button.addEventListener("click", function () {
+      button.classList.add("is-clicked");
+      window.setTimeout(function () { button.classList.remove("is-clicked"); }, 650);
+    });
+  });
+})();
+</script>
+
+<!-- Rendu riche de l'assistant : Markdown, LaTeX, chimie et code -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/lib/common.min.js" defer></script>
+<script>
+/* La configuration MathJax doit être définie AVANT le chargement de son moteur. */
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)'], ['$', '$']],
+    displayMath: [['\\[', '\\]'], ['$$', '$$']],
+    processEscapes: true,
+    packages: {'[+]': ['mhchem']}
+  },
+  loader: { load: ['[tex]/mhchem'] },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" defer></script>
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+  const target = document.getElementById("assistant-answer-rendered");
+  const payload = document.getElementById("assistant-answer-source");
+  if (!target || !payload) return;
+
+  let source = "";
+  try { source = JSON.parse(payload.textContent || '""'); }
+  catch (_) { source = payload.textContent || ""; }
+
+  /*
+   * Marked interprète les antislashs LaTeX comme des échappements Markdown.
+   * On protège donc les expressions mathématiques AVANT l'analyse Markdown,
+   * puis on les restaure après assainissement du HTML.
+   */
+  function protectMath(text) {
+    const saved = [];
+    const token = function (math) {
+      const key = "MATHJAXPLACEHOLDER" + saved.length + "END";
+      saved.push(math);
+      return key;
+    };
+
+    // Ne jamais extraire de mathématiques à l'intérieur des blocs de code.
+    const chunks = text.split(/(```[\s\S]*?```|~~~[\s\S]*?~~~)/g);
+    for (let i = 0; i < chunks.length; i++) {
+      if (/^(```|~~~)/.test(chunks[i])) continue;
+      chunks[i] = chunks[i].replace(
+        /\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)|\$\$([\s\S]*?)\$\$|\$([^$\n]+)\$/g,
+        function (whole, displaySlash, inlineSlash, displayDollar, inlineDollar) {
+          return token(whole);
+        }
+      );
+    }
+    return { text: chunks.join(""), saved: saved };
+  }
+
+  function restoreMath(container, saved) {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    nodes.forEach(function (node) {
+      let value = node.nodeValue;
+      let changed = false;
+      saved.forEach(function (math, index) {
+        const key = "MATHJAXPLACEHOLDER" + index + "END";
+        if (value.includes(key)) {
+          value = value.split(key).join(math);
+          changed = true;
+        }
+      });
+      if (changed) node.nodeValue = value;
+    });
+  }
+
+  async function waitForLibraries() {
+    let tries = 0;
+    while ((!window.marked || !window.DOMPurify || !window.MathJax ||
+            !window.MathJax.startup || !window.MathJax.startup.promise) && tries < 100) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      tries++;
+    }
+    if (!window.marked || !window.DOMPurify) {
+      target.textContent = source;
+      target.classList.add("answer-render-fallback");
+      return false;
+    }
+    if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+      try { await window.MathJax.startup.promise; } catch (_) {}
+    }
+    return true;
+  }
+
+  if (!(await waitForLibraries())) return;
+
+  const protectedContent = protectMath(source);
+  const html = window.marked.parse(protectedContent.text, {
+    gfm: true,
+    breaks: true
+  });
+
+  target.innerHTML = window.DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    FORBID_TAGS: ["style", "iframe", "object", "embed", "form"],
+    FORBID_ATTR: ["style", "onerror", "onclick", "onload"]
+  });
+
+  restoreMath(target, protectedContent.saved);
+
+  target.querySelectorAll("pre code").forEach(function (block) {
+    if (window.hljs) window.hljs.highlightElement(block);
+  });
+
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    try {
+      if (window.MathJax.typesetClear) window.MathJax.typesetClear([target]);
+      await window.MathJax.typesetPromise([target]);
+    } catch (error) {
+      console.warn("Rendu mathématique indisponible :", error);
+    }
+  }
+});
+</script>
+
+</body></html>
